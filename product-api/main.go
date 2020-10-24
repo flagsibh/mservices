@@ -19,7 +19,7 @@ func main() {
 	sm := http.NewServeMux()
 	sm.Handle("/", ph)
 
-	srv := server.New(sm, ":9090")
+	srv := server.New(sm)
 	go func() {
 		err := srv.ListenAndServe()
 		if err != nil {
