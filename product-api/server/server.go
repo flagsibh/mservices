@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -10,8 +11,10 @@ import (
 var bindAddress = env.String("BIND_ADDRESS", false, ":9090", "Bind address for the server")
 
 // New server
-func New(mux *http.ServeMux) *http.Server {
+func New(mux http.Handler, l *log.Logger) *http.Server {
 	env.Parse()
+
+	l.Printf("Starting server on '%s'", *bindAddress)
 
 	srv := &http.Server{
 		Addr:         *bindAddress,

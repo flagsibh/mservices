@@ -10,16 +10,26 @@ import (
 
 	"github.com/flagsibh/mservices/product-api/handlers"
 	"github.com/flagsibh/mservices/product-api/server"
+	"github.com/gorilla/mux"
 )
 
 func main() {
 	l := log.New(os.Stdout, "product-api ", log.LstdFlags)
 	ph := handlers.NewProducts(l)
 
-	sm := http.NewServeMux()
-	sm.Handle("/", ph)
+	r := mux.NewRouter()
+	getr := r.Methods(http.MethodGet).Subrouter()
+	getr.HandleFunc("/", ph.GetProducts)
 
-	srv := server.New(sm)
+	putr := r.Methods(http.MethodPut).Subrouter()
+	putr.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
+	putr.Use(ph.ProductValidation)
+
+	postr := r.Methods(http.MethodPost).Subrouter()
+	postr.HandleFunc("/", ph.AddProduct)
+	postr.Use(ph.ProductValidation)
+
+	srv := server.New(r, l)
 	go func() {
 		err := srv.ListenAndServe()
 		if err != nil {
