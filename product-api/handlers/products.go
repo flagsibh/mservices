@@ -1,3 +1,19 @@
+// Package handlers Products API.
+//
+// Documentation of Products API.
+//
+// Schemes: http
+// BasePath: /
+// Version: 1.0.0
+// Host: some-url.com
+//
+// Consumes:
+// 	- application/json
+//
+// Produces:
+// 	- application/json
+//
+// swagger:meta
 package handlers
 
 import (
@@ -16,12 +32,40 @@ type Products struct {
 	l *log.Logger
 }
 
+// Response containing an array of products.
+// swagger:response productsResponse
+type productsResponseWrapper struct {
+	// in:body
+	Body []data.Product
+}
+
+// ProductsResponse represents body of Products response.
+type ProductsResponse struct {
+	Products []data.Product `json:"products"`
+}
+
+// swagger:parameters deleteProduct
+type idParameterWrapper struct {
+	// The id of the product to delete
+	// in:path
+	// required: true
+	ID int `json:"id"`
+}
+
+// swagger:response noContent
+type noContentWrapper struct {
+}
+
 // NewProducts creates a new product list
 func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
 // GetProducts get a list of products
+// swagger:route GET / products listProducts
+// Returns a list of Products
+// Responses:
+//	200: productsResponse
 func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle GET Products")
 
@@ -62,6 +106,32 @@ func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+}
+
+// DeleteProduct deletes a product from the list
+// swagger:route DELETE /{id} products deleteProduct
+// Deletes a product
+// Responses:
+//	200: noContent
+func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
+	p.l.Println("Handle DELETE Product")
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(rw, "Invalid ID", http.StatusBadRequest)
+	}
+
+	p.l.Printf("Got ID: %d", id)
+
+	errnf := data.DeleteProduct(id)
+	if errnf == data.ErrProductNotFound {
+		http.Error(rw, "Product not found", http.StatusNotFound)
+	} else {
+		if errnf != nil {
+			http.Error(rw, "Product not found", http.StatusInternalServerError)
+		}
+	}
 }
 
 // KeyProduct to identifiy the product in the context

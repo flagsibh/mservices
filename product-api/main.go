@@ -10,6 +10,7 @@ import (
 
 	"github.com/flagsibh/mservices/product-api/handlers"
 	"github.com/flagsibh/mservices/product-api/server"
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -21,6 +22,11 @@ func main() {
 	getr := r.Methods(http.MethodGet).Subrouter()
 	getr.HandleFunc("/", ph.GetProducts)
 
+	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := middleware.Redoc(opts, nil)
+	getr.Handle("/docs", sh)
+	getr.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+
 	putr := r.Methods(http.MethodPut).Subrouter()
 	putr.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
 	putr.Use(ph.ProductValidation)
@@ -28,6 +34,9 @@ func main() {
 	postr := r.Methods(http.MethodPost).Subrouter()
 	postr.HandleFunc("/", ph.AddProduct)
 	postr.Use(ph.ProductValidation)
+
+	delr := r.Methods(http.MethodDelete).Subrouter()
+	delr.HandleFunc("/{id:[0-9]+}", ph.DeleteProduct)
 
 	srv := server.New(r, l)
 	go func() {

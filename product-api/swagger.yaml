@@ -1,0 +1,86 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Product:
+    description: Product is the main data unit
+    properties:
+      description:
+        description: the description of the product
+        maxLength: 10000
+        type: string
+        x-go-name: Description
+      id:
+        description: the id of the product.
+        format: int64
+        minimum: 1
+        type: integer
+        x-go-name: ID
+      name:
+        description: the name of the product
+        maxLength: 255
+        type: string
+        x-go-name: Name
+      price:
+        description: the price of the product
+        format: float
+        minimum: 0.01
+        type: number
+        x-go-name: Price
+      sku:
+        description: the unique product identification
+        pattern: '[a-z]+-[a-z]+-[a-z]+'
+        type: string
+        x-go-name: SKU
+    required:
+    - id
+    - name
+    - price
+    - sku
+    type: object
+    x-go-package: github.com/flagsibh/mservices/product-api/data
+host: some-url.com
+info:
+  description: Documentation of Products API.
+  title: Products API.
+  version: 1.0.0
+paths:
+  /:
+    get:
+      description: Returns a list of Products
+      operationId: listProducts
+      responses:
+        "200":
+          $ref: '#/responses/productsResponse'
+      tags:
+      - products
+  /{id}:
+    delete:
+      description: Deletes a product
+      operationId: deleteProduct
+      parameters:
+      - description: The id of the product to delete
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/noContent'
+      tags:
+      - products
+produces:
+- application/json
+responses:
+  noContent: {}
+  productsResponse:
+    description: Response containing an array of products.
+    schema:
+      items:
+        $ref: '#/definitions/Product'
+      type: array
+schemes:
+- http
+swagger: "2.0"
