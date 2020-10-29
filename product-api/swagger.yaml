@@ -2,6 +2,24 @@ basePath: /
 consumes:
 - application/json
 definitions:
+  ErrGenericError:
+    description: ErrGenericError is a generic error message returned by a server
+    properties:
+      message:
+        type: string
+        x-go-name: Message
+    type: object
+    x-go-package: github.com/flagsibh/mservices/product-api/data
+  ErrGenericErrors:
+    properties:
+      messages:
+        items:
+          type: string
+        type: array
+        x-go-name: Messages
+    title: ErrGenericErrors is a collection of generic or validation errors.
+    type: object
+    x-go-package: github.com/flagsibh/mservices/product-api/data
   Product:
     description: Product is the main data unit
     properties:
@@ -39,16 +57,6 @@ definitions:
     - sku
     type: object
     x-go-package: github.com/flagsibh/mservices/product-api/data
-  ProductsResponse:
-    properties:
-      products:
-        items:
-          $ref: '#/definitions/Product'
-        type: array
-        x-go-name: Products
-    title: ProductsResponse represents body of Products response.
-    type: object
-    x-go-package: github.com/flagsibh/mservices/product-api/handlers
 host: some-url.com
 info:
   description: Documentation of Products API.
@@ -57,16 +65,39 @@ info:
 paths:
   /:
     get:
-      description: Returns a list of Products
       operationId: listProducts
       responses:
         "200":
           $ref: '#/responses/productsResponse'
+      summary: Returns a list of products.
+      tags:
+      - products
+    post:
+      operationId: createProduct
+      responses:
+        "201":
+          $ref: '#/responses/productResponse'
+        "422":
+          $ref: '#/responses/errorValidationResponse'
+        "501":
+          $ref: '#/responses/errorResponse'
+      summary: Creates a new product.
+      tags:
+      - products
+    put:
+      operationId: updateProduct
+      responses:
+        "200":
+          $ref: '#/responses/noContentResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "422":
+          $ref: '#/responses/errorValidationResponse'
+      summary: Updates an existing product.
       tags:
       - products
   /{id}:
     delete:
-      description: Deletes a product
       operationId: deleteProduct
       parameters:
       - description: The id of the product to delete
@@ -77,18 +108,55 @@ paths:
         type: integer
         x-go-name: ID
       responses:
+        "204":
+          $ref: '#/responses/noContentResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "501":
+          $ref: '#/responses/errorResponse'
+      summary: Deletes a product.
+      tags:
+      - products
+    get:
+      operationId: findProduct
+      parameters:
+      - description: The id of the product to retrieve
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      responses:
         "200":
-          $ref: '#/responses/noContent'
+          $ref: '#/responses/productResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+      summary: Retuns a single product from the list.
       tags:
       - products
 produces:
 - application/json
 responses:
-  noContent: {}
+  errorResponse:
+    description: Generic error message returned as a string
+    schema:
+      $ref: '#/definitions/ErrGenericError'
+  errorValidationResponse:
+    description: Validation errors defined as an array of strings
+    schema:
+      $ref: '#/definitions/ErrGenericErrors'
+  noContentResponse: {}
+  productResponse:
+    description: Data structure representing a single product
+    schema:
+      $ref: '#/definitions/Product'
   productsResponse:
     description: Response containing an array of products.
     schema:
-      $ref: '#/definitions/ProductsResponse'
+      items:
+        $ref: '#/definitions/Product'
+      type: array
 schemes:
 - http
 swagger: "2.0"

@@ -10,15 +10,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// KeyProduct to identifiy the product in the context
+type KeyProduct struct{}
+
 // Products collection of products
 type Products struct {
 	l *log.Logger
 	v *data.Validation
-}
-
-// ProductsResponse represents body of Products response.
-type ProductsResponse struct {
-	Products []data.Product `json:"products"`
 }
 
 // NewProducts creates a new product list
@@ -28,7 +26,7 @@ func NewProducts(l *log.Logger, v *data.Validation) *Products {
 
 // GetProducts get a list of products
 // swagger:route GET / products listProducts
-// Returns a list of Products
+// Returns a list of products.
 // Responses:
 //	200: productsResponse
 func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
@@ -43,7 +41,8 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 
 // GetProduct get a product from the list
 // swagger:route GET /{id} products findProduct
-// Response:
+// Retuns a single product from the list.
+// Responses:
 //	200: productResponse
 // 	404: errorResponse
 func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
@@ -76,6 +75,7 @@ func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
 
 // AddProduct Creates a new product
 // swagger:route POST / products createProduct
+// Creates a new product.
 // Responses:
 //	201: productResponse
 // 	422: errorValidationResponse
@@ -88,6 +88,12 @@ func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProduct updates a product
+// swagger:route PUT / products updateProduct
+// Updates an existing product.
+// Responses:
+// 	200: noContentResponse
+// 	404: errorResponse
+// 	422: errorValidationResponse
 func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle PUT Product")
 
@@ -95,20 +101,20 @@ func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 
-	errnf := data.UpdateProduct(id, prod)
-	if errnf == data.ErrProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
-	} else {
-		if errnf != nil {
-			http.Error(rw, "Product not found", http.StatusInternalServerError)
-		}
+	err := data.UpdateProduct(id, prod)
+	if err == data.ErrProductNotFound {
+		rw.WriteHeader(http.StatusNotFound)
+		utils.ToJSON(&data.ErrGenericError{Message: "Product not found in database"}, rw)
+		return
 	}
 
+	// write the no content success header
+	rw.WriteHeader(http.StatusNoContent)
 }
 
 // DeleteProduct deletes a product from the list
 // swagger:route DELETE /{id} products deleteProduct
-// Deletes a product
+// Deletes a product.
 // Responses:
 //	204: noContentResponse
 //	404: errorResponse
@@ -149,6 +155,3 @@ func (p *Products) getProductID(r *http.Request) int {
 
 	return id
 }
-
-// KeyProduct to identifiy the product in the context
-type KeyProduct struct{}

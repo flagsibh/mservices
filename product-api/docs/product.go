@@ -2,7 +2,6 @@ package docs
 
 import (
 	"github.com/flagsibh/mservices/product-api/data"
-	"github.com/flagsibh/mservices/product-api/handlers"
 )
 
 // Generic error message returned as a string
@@ -14,7 +13,7 @@ type errorResponseWrapper struct {
 }
 
 // Validation errors defined as an array of strings
-// swagger:response errorValidation
+// swagger:response errorValidationResponse
 type errorValidationResponseWrapper struct {
 	// Collection of the errors
 	// in: body
@@ -33,15 +32,23 @@ type productResponseWrapper struct {
 // swagger:response productsResponse
 type productsResponseWrapper struct {
 	// in:body
-	Body handlers.ProductsResponse
+	Body []data.Product
 }
 
 // swagger:response noContentResponse
 type noContentResponseWrapper struct {
 }
 
+// swagger:parameters findProduct
+type findProductParameterIDWrapper struct {
+	// The id of the product to retrieve
+	// in:path
+	// required: true
+	ID int `json:"id"`
+}
+
 // swagger:parameters deleteProduct
-type idParameterWrapper struct {
+type deleteProductParameterIDWrapper struct {
 	// The id of the product to delete
 	// in:path
 	// required: true

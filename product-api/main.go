@@ -24,6 +24,7 @@ func main() {
 	r := mux.NewRouter()
 	getr := r.Methods(http.MethodGet).Subrouter()
 	getr.HandleFunc("/", ph.GetProducts)
+	getr.HandleFunc("/{id:[0-9]+}", ph.GetProduct)
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)
