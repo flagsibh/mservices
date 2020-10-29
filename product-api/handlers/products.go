@@ -1,42 +1,19 @@
-// Package handlers Products API.
-//
-// Documentation of Products API.
-//
-// Schemes: http
-// BasePath: /
-// Version: 1.0.0
-// Host: some-url.com
-//
-// Consumes:
-// 	- application/json
-//
-// Produces:
-// 	- application/json
-//
-// swagger:meta
 package handlers
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/flagsibh/mservices/product-api/data"
+	"github.com/flagsibh/mservices/product-api/utils"
 	"github.com/gorilla/mux"
 )
 
 // Products collection of products
 type Products struct {
 	l *log.Logger
-}
-
-// Response containing an array of products.
-// swagger:response productsResponse
-type productsResponseWrapper struct {
-	// in:body
-	Body []data.Product
+	v *data.Validation
 }
 
 // ProductsResponse represents body of Products response.
@@ -44,21 +21,9 @@ type ProductsResponse struct {
 	Products []data.Product `json:"products"`
 }
 
-// swagger:parameters deleteProduct
-type idParameterWrapper struct {
-	// The id of the product to delete
-	// in:path
-	// required: true
-	ID int `json:"id"`
-}
-
-// swagger:response noContent
-type noContentWrapper struct {
-}
-
 // NewProducts creates a new product list
-func NewProducts(l *log.Logger) *Products {
-	return &Products{l}
+func NewProducts(l *log.Logger, v *data.Validation) *Products {
+	return &Products{l, v}
 }
 
 // GetProducts get a list of products
@@ -70,13 +35,51 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle GET Products")
 
 	lp := data.GetProducts()
-	err := lp.ToJSON(rw)
+	err := utils.ToJSON(lp, rw)
 	if err != nil {
 		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
 	}
 }
 
+// GetProduct get a product from the list
+// swagger:route GET /{id} products findProduct
+// Response:
+//	200: productResponse
+// 	404: errorResponse
+func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
+	id := p.getProductID(r)
+
+	prod, err := data.FindProduct(id)
+
+	switch err {
+	case nil:
+	case data.ErrProductNotFound:
+		p.l.Println("[ERROR] fetching product", err)
+
+		rw.WriteHeader(http.StatusNotFound)
+		utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
+		return
+	default:
+		p.l.Println("[ERROR] fetching product", err)
+
+		rw.WriteHeader(http.StatusInternalServerError)
+		utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
+		return
+	}
+
+	err = utils.ToJSON(prod, rw)
+	if err != nil {
+		// we should never be here but log the error just incase
+		p.l.Println("[ERROR] serializing product", err)
+	}
+}
+
 // AddProduct Creates a new product
+// swagger:route POST / products createProduct
+// Responses:
+//	201: productResponse
+// 	422: errorValidationResponse
+//	501: errorResponse
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle POST Product")
 
@@ -88,13 +91,8 @@ func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle PUT Product")
 
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(rw, "Invalid ID", http.StatusBadRequest)
-	}
+	id := p.getProductID(r)
 
-	p.l.Printf("Got ID: %d", id)
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 
 	errnf := data.UpdateProduct(id, prod)
@@ -112,51 +110,45 @@ func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 // swagger:route DELETE /{id} products deleteProduct
 // Deletes a product
 // Responses:
-//	200: noContent
+//	204: noContentResponse
+//	404: errorResponse
+//	501: errorResponse
 func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle DELETE Product")
 
+	id := p.getProductID(r)
+
+	p.l.Printf("Got ID: %d", id)
+
+	err := data.DeleteProduct(id)
+
+	if err == data.ErrProductNotFound {
+		rw.WriteHeader(http.StatusNotFound)
+		utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
+		return
+	}
+
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
+		return
+	}
+
+	rw.WriteHeader(http.StatusNoContent)
+}
+
+func (p *Products) getProductID(r *http.Request) int {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(rw, "Invalid ID", http.StatusBadRequest)
+		// http.Error(rw, "Invalid ID", http.StatusBadRequest)
+		panic(err)
 	}
 
 	p.l.Printf("Got ID: %d", id)
 
-	errnf := data.DeleteProduct(id)
-	if errnf == data.ErrProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
-	} else {
-		if errnf != nil {
-			http.Error(rw, "Product not found", http.StatusInternalServerError)
-		}
-	}
+	return id
 }
 
 // KeyProduct to identifiy the product in the context
 type KeyProduct struct{}
-
-//ProductValidation is middleware for product validation
-func (p *Products) ProductValidation(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		prod := &data.Product{}
-		er := prod.FromJSON(r.Body)
-		if er != nil {
-			http.Error(rw, "Unable to unmarshal json", http.StatusBadRequest)
-			return
-		}
-
-		// validate the product
-		err := prod.Validate()
-		if err != nil {
-			http.Error(rw, fmt.Sprintf("Error validating the product: %s", err), http.StatusBadRequest)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
-		req := r.WithContext(ctx)
-
-		next.ServeHTTP(rw, req)
-	})
-}

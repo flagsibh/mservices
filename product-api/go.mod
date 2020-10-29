@@ -11,6 +11,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.7 // indirect
 	github.com/go-openapi/swag v0.19.11 // indirect
 	github.com/go-openapi/validate v0.19.12 // indirect
+	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-swagger/go-swagger v0.25.0 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200809085317-e36bfde3bb78 // indirect

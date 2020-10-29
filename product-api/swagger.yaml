@@ -39,6 +39,16 @@ definitions:
     - sku
     type: object
     x-go-package: github.com/flagsibh/mservices/product-api/data
+  ProductsResponse:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/Product'
+        type: array
+        x-go-name: Products
+    title: ProductsResponse represents body of Products response.
+    type: object
+    x-go-package: github.com/flagsibh/mservices/product-api/handlers
 host: some-url.com
 info:
   description: Documentation of Products API.
@@ -78,9 +88,7 @@ responses:
   productsResponse:
     description: Response containing an array of products.
     schema:
-      items:
-        $ref: '#/definitions/Product'
-      type: array
+      $ref: '#/definitions/ProductsResponse'
 schemes:
 - http
 swagger: "2.0"

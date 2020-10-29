@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/flagsibh/mservices/product-api/data"
 	"github.com/flagsibh/mservices/product-api/handlers"
 	"github.com/flagsibh/mservices/product-api/server"
 	"github.com/go-openapi/runtime/middleware"
@@ -16,7 +17,9 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "product-api ", log.LstdFlags)
-	ph := handlers.NewProducts(l)
+	v := data.NewValidation()
+
+	ph := handlers.NewProducts(l, v)
 
 	r := mux.NewRouter()
 	getr := r.Methods(http.MethodGet).Subrouter()
