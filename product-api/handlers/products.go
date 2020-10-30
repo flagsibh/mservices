@@ -16,12 +16,11 @@ type KeyProduct struct{}
 // Products collection of products
 type Products struct {
 	l *log.Logger
-	v *data.Validation
 }
 
 // NewProducts creates a new product list
-func NewProducts(l *log.Logger, v *data.Validation) *Products {
-	return &Products{l, v}
+func NewProducts(l *log.Logger) *Products {
+	return &Products{l}
 }
 
 // GetProducts get a list of products

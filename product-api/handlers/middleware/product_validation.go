@@ -1,27 +1,21 @@
-package data
+package middleware
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"regexp"
 
+	"github.com/flagsibh/mservices/product-api/data"
+	"github.com/flagsibh/mservices/product-api/handlers"
+	"github.com/flagsibh/mservices/product-api/utils"
 	"github.com/go-playground/validator"
 )
 
-// ErrInvalidProductPath is an error message when the product path is not valid
-var ErrInvalidProductPath = fmt.Errorf("Invalid Path, path should be /products/[id]")
-
-// ErrGenericError is a generic error message returned by a server
-type ErrGenericError struct {
-	Message string `json:"message"`
-}
-
-// ErrGenericErrors is a collection of generic or validation errors.
-type ErrGenericErrors struct {
-	Messages []string `json:"messages"`
-}
-
 // Validation contains the validator to apply validation rules
 type Validation struct {
+	l        *log.Logger
 	validate *validator.Validate
 }
 
@@ -54,10 +48,10 @@ func (v ValidationErrors) Errors() []string {
 }
 
 // NewValidation creates a new validatioin definition/tags on a product
-func NewValidation() *Validation {
+func NewValidation(l *log.Logger) *Validation {
 	validate := validator.New()
 	validate.RegisterValidation("sku", skuValidator)
-	return &Validation{validate}
+	return &Validation{l, validate}
 }
 
 // Validate runs validation on the item
@@ -84,4 +78,33 @@ func skuValidator(fl validator.FieldLevel) bool {
 	matches := re.FindAllString(fl.Field().String(), -1)
 
 	return (len(matches) == 1)
+}
+
+// ProductValidationMiddleware is middleware for product validation
+func (v *Validation) ProductValidationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		prod := &data.Product{}
+		err := utils.FromJSON(prod, r.Body)
+		if err != nil {
+			v.l.Println("[ERROR] deserializing product", err)
+
+			rw.WriteHeader(http.StatusBadRequest)
+			utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
+			return
+		}
+
+		// validate the product
+		errs := v.Validate(prod)
+		if len(errs) != 0 {
+			// return the validation messages as an array
+			rw.WriteHeader(http.StatusUnprocessableEntity)
+			utils.ToJSON(&data.ErrGenericErrors{Messages: errs.Errors()}, rw)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), handlers.KeyProduct{}, prod)
+		req := r.WithContext(ctx)
+
+		next.ServeHTTP(rw, req)
+	})
 }
