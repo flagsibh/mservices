@@ -10,6 +10,7 @@ import (
 
 	"github.com/flagsibh/mservices/product-api/data"
 	"github.com/flagsibh/mservices/product-api/handlers"
+	mw "github.com/flagsibh/mservices/product-api/handlers/middleware"
 	"github.com/flagsibh/mservices/product-api/server"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
@@ -22,6 +23,8 @@ func main() {
 	ph := handlers.NewProducts(l, v)
 
 	r := mux.NewRouter()
+	r.Use(mw.ContentTypeMiddleware)
+
 	getr := r.Methods(http.MethodGet).Subrouter()
 	getr.HandleFunc("/", ph.GetProducts)
 	getr.HandleFunc("/{id:[0-9]+}", ph.GetProduct)
