@@ -146,7 +146,8 @@ responses:
     description: Validation errors defined as an array of strings
     schema:
       $ref: '#/definitions/ErrGenericErrors'
-  noContentResponse: {}
+  noContentResponse:
+    description: Response with empty body
   productResponse:
     description: Data structure representing a single product
     schema:

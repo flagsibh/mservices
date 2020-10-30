@@ -35,6 +35,7 @@ type productsResponseWrapper struct {
 	Body []data.Product
 }
 
+// Response with empty body
 // swagger:response noContentResponse
 type noContentResponseWrapper struct {
 }
