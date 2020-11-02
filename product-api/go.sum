@@ -74,6 +74,9 @@ github.com/felixge/httpsnoop v1.0.1 h1:lvB5Jl89CsZtGIWuTcDM1E/vkVs49/Ml7JJe07l8S
 github.com/felixge/httpsnoop v1.0.1/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/flagsibh/mservices v0.0.0-20201102143542-88a90188eb73 h1:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
 github.com/flagsibh/mservices v0.0.0-20201102172231-18c6d5c20c42 h1:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
+github.com/flagsibh/mservices v0.0.0-20201102174832-7a0b5f5ca4df h1:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
+github.com/flagsibh/mservices/server v0.0.0-20201102173413-8ef1ea72842d h1:NUl2+xAwJtTq3UZoz0g9htUWN04o3vHCzrfyt/lON68=
+github.com/flagsibh/mservices/server v0.0.0-20201102173413-8ef1ea72842d/go.mod h1:4gI6Ix2kUzAjxWHHvcoNlG4gd801dqotLF76BadHuIY=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=

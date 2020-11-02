@@ -8,6 +8,7 @@ require (
 	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214 // indirect
 	github.com/alexkohler/nakedret v1.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
+	github.com/flagsibh/mservices/server v0.0.0-20201102173413-8ef1ea72842d
 	github.com/go-openapi/analysis v0.19.11 // indirect
 	github.com/go-openapi/errors v0.19.8 // indirect
 	github.com/go-openapi/runtime v0.19.23
