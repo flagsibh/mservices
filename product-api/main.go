@@ -9,7 +9,8 @@ import (
 
 	"github.com/flagsibh/mservices/product-api/handlers"
 	mw "github.com/flagsibh/mservices/product-api/handlers/middleware"
-	"github.com/flagsibh/mservices/product-api/server"
+	"github.com/flagsibh/mservices/server"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	hclog "github.com/hashicorp/go-hclog"
