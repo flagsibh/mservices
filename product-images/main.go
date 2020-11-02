@@ -34,7 +34,7 @@ func main() {
 	)
 
 	// create a logger for the server from the default logger
-	sl := l.StandardLogger(&hclog.StandardLoggerOptions{InferLevels: true})
+	//sl := l.StandardLogger(&hclog.StandardLoggerOptions{InferLevels: true})
 
 	// create the storage class, use local storage
 	// max filesize 5MB
@@ -48,7 +48,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// create the handlers
-	fh := handlers.NewFiles(stor, sl)
+	fh := handlers.NewFiles(stor, l)
 
 	ph := r.Methods(http.MethodPost).Subrouter()
 	ph.HandleFunc(FileNamePattern, fh.Upload)
