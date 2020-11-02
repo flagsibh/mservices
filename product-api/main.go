@@ -21,7 +21,7 @@ const (
 )
 
 func main() {
-	l := hclog.Default()
+	l := hclog.Default().Named("product-api")
 	v := mw.NewValidation(l)
 
 	ph := handlers.NewProducts(l)
