@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 
@@ -11,11 +10,12 @@ import (
 	"github.com/flagsibh/mservices/product-api/handlers"
 	"github.com/flagsibh/mservices/product-api/utils"
 	"github.com/go-playground/validator"
+	hclog "github.com/hashicorp/go-hclog"
 )
 
 // Validation contains the validator to apply validation rules
 type Validation struct {
-	l        *log.Logger
+	l        hclog.Logger
 	validate *validator.Validate
 }
 
@@ -48,7 +48,7 @@ func (v ValidationErrors) Errors() []string {
 }
 
 // NewValidation creates a new validatioin definition/tags on a product
-func NewValidation(l *log.Logger) *Validation {
+func NewValidation(l hclog.Logger) *Validation {
 	validate := validator.New()
 	validate.RegisterValidation("sku", skuValidator)
 	return &Validation{l, validate}
@@ -86,7 +86,7 @@ func (v *Validation) ProductValidationMiddleware(next http.Handler) http.Handler
 		prod := &data.Product{}
 		err := utils.FromJSON(prod, r.Body)
 		if err != nil {
-			v.l.Println("[ERROR] deserializing product", err)
+			v.l.Error("deserializing product", err)
 
 			rw.WriteHeader(http.StatusBadRequest)
 			utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)

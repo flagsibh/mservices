@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,10 +12,16 @@ import (
 	"github.com/flagsibh/mservices/product-api/server"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
+	hclog "github.com/hashicorp/go-hclog"
+)
+
+const (
+	// IDParamPattern sets the Regex pattern to extract de ID from de URI.
+	IDParamPattern = "/{id:[0-9]+}"
 )
 
 func main() {
-	l := log.New(os.Stdout, "product-api ", log.LstdFlags)
+	l := hclog.Default()
 	v := mw.NewValidation(l)
 
 	ph := handlers.NewProducts(l)
@@ -26,7 +31,7 @@ func main() {
 
 	getr := r.Methods(http.MethodGet).Subrouter()
 	getr.HandleFunc("/", ph.GetProducts)
-	getr.HandleFunc("/{id:[0-9]+}", ph.GetProduct)
+	getr.HandleFunc(IDParamPattern, ph.GetProduct)
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)
@@ -34,7 +39,7 @@ func main() {
 	getr.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	putr := r.Methods(http.MethodPut).Subrouter()
-	putr.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
+	putr.HandleFunc(IDParamPattern, ph.UpdateProduct)
 	putr.Use(v.ProductValidationMiddleware)
 
 	postr := r.Methods(http.MethodPost).Subrouter()
@@ -42,13 +47,13 @@ func main() {
 	postr.Use(v.ProductValidationMiddleware)
 
 	delr := r.Methods(http.MethodDelete).Subrouter()
-	delr.HandleFunc("/{id:[0-9]+}", ph.DeleteProduct)
+	delr.HandleFunc(IDParamPattern, ph.DeleteProduct)
 
 	srv := server.New(r, l)
 	go func() {
 		err := srv.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			l.Info("Shutdown", "msg", err)
 		}
 	}()
 
@@ -57,7 +62,7 @@ func main() {
 	signal.Notify(channel, os.Kill)
 
 	sc := <-channel
-	l.Println("Received terminate, graceful shutdown", sc)
+	l.Info("Received terminate, graceful shutdown", "channel", sc)
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	srv.Shutdown(tc)

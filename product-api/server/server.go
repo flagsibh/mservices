@@ -1,21 +1,21 @@
 package server
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	gh "github.com/gorilla/handlers"
+	hclog "github.com/hashicorp/go-hclog"
 	"github.com/nicholasjackson/env"
 )
 
 var bindAddress = env.String("BIND_ADDRESS", false, ":9090", "Bind address for the server")
 
 // New server
-func New(mux http.Handler, l *log.Logger) *http.Server {
+func New(mux http.Handler, l hclog.Logger) *http.Server {
 	env.Parse()
 
-	l.Printf("Starting server on '%s'", *bindAddress)
+	l.Info("Starting server", "port", *bindAddress)
 
 	// CORS
 	// This could also have been implemented with a middleware:

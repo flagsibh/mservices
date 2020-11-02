@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/flagsibh/mservices/product-api/data"
 	"github.com/flagsibh/mservices/product-api/utils"
 	"github.com/gorilla/mux"
+	hclog "github.com/hashicorp/go-hclog"
 )
 
 // KeyProduct to identifiy the product in the context
@@ -15,11 +15,11 @@ type KeyProduct struct{}
 
 // Products collection of products
 type Products struct {
-	l *log.Logger
+	l hclog.Logger
 }
 
 // NewProducts creates a new product list
-func NewProducts(l *log.Logger) *Products {
+func NewProducts(l hclog.Logger) *Products {
 	return &Products{l}
 }
 
@@ -29,7 +29,7 @@ func NewProducts(l *log.Logger) *Products {
 // Responses:
 //	200: productsResponse
 func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle GET Products")
+	p.l.Debug("Handle GET Products")
 
 	lp := data.GetProducts()
 	err := utils.ToJSON(lp, rw)
@@ -52,13 +52,13 @@ func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 	case data.ErrProductNotFound:
-		p.l.Println("[ERROR] fetching product", err)
+		p.l.Error("fetching product", err)
 
 		rw.WriteHeader(http.StatusNotFound)
 		utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
 		return
 	default:
-		p.l.Println("[ERROR] fetching product", err)
+		p.l.Error("fetching product", err)
 
 		rw.WriteHeader(http.StatusInternalServerError)
 		utils.ToJSON(&data.ErrGenericError{Message: err.Error()}, rw)
@@ -68,7 +68,7 @@ func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
 	err = utils.ToJSON(prod, rw)
 	if err != nil {
 		// we should never be here but log the error just incase
-		p.l.Println("[ERROR] serializing product", err)
+		p.l.Error("serializing product", err)
 	}
 }
 
@@ -80,7 +80,7 @@ func (p *Products) GetProduct(rw http.ResponseWriter, r *http.Request) {
 // 	422: errorValidationResponse
 //	501: errorResponse
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle POST Product")
+	p.l.Debug("Handle POST Product")
 
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 	data.AddProduct(prod)
@@ -94,7 +94,7 @@ func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 // 	404: errorResponse
 // 	422: errorValidationResponse
 func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle PUT Product")
+	p.l.Debug("Handle PUT Product")
 
 	id := p.getProductID(r)
 
@@ -119,11 +119,9 @@ func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 //	404: errorResponse
 //	501: errorResponse
 func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle DELETE Product")
+	p.l.Debug("Handle DELETE Product")
 
 	id := p.getProductID(r)
-
-	p.l.Printf("Got ID: %d", id)
 
 	err := data.DeleteProduct(id)
 
@@ -150,7 +148,7 @@ func (p *Products) getProductID(r *http.Request) int {
 		panic(err)
 	}
 
-	p.l.Printf("Got ID: %d", id)
+	p.l.Debug("Got ID: %d", id)
 
 	return id
 }
