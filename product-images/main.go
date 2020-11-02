@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/flagsibh/mservices/product-api/server"
 	"github.com/flagsibh/mservices/product-images/files"
 	"github.com/flagsibh/mservices/product-images/handlers"
+	"github.com/flagsibh/mservices/server"
 	"github.com/gorilla/mux"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/nicholasjackson/env"
