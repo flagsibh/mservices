@@ -9,6 +9,7 @@ import (
 
 	"github.com/flagsibh/mservices/product-images/files"
 	"github.com/flagsibh/mservices/product-images/handlers"
+	"github.com/flagsibh/mservices/product-images/handlers/middleware"
 	"github.com/flagsibh/mservices/server"
 	"github.com/gorilla/mux"
 	hclog "github.com/hashicorp/go-hclog"
@@ -49,6 +50,7 @@ func main() {
 
 	// create the handlers
 	fh := handlers.NewFiles(stor, l)
+	gziph := middleware.GzipHandler{}
 
 	ph := r.Methods(http.MethodPost).Subrouter()
 	ph.HandleFunc(FileNamePattern, fh.Upload)
@@ -60,6 +62,7 @@ func main() {
 		FileNamePattern,
 		http.StripPrefix("/images/", http.FileServer(http.Dir(*basePath))),
 	)
+	gh.Use(gziph.GzipMiddleware)
 
 	srv := server.New(r, l)
 	go func() {
